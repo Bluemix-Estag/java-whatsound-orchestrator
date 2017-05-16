@@ -1,0 +1,289 @@
+<head>
+        <meta charset="utf-8">
+        <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
+        <meta name="viewport" content="width=device-width, user-scalable=no">        <title>SpotWatson - Chat</title>
+        <link rel="apple-touch-icon" href="https://m.epuap.gov.pl/wps/PA_Blurb_1/images/oob/WebSphereLogoNew.png"/>
+        <link rel="apple-touch-icon" sizes="72x72" href="https://m.epuap.gov.pl/wps/PA_Blurb_1/images/oob/WebSphereLogoNew.png"/>
+        <link rel="apple-touch-icon" sizes="114x114" href="https://m.epuap.gov.pl/wps/PA_Blurb_1/images/oob/WebSphereLogoNew.png"/>
+        <meta name="apple-mobile-web-app-capable" content="yes">
+    </head>
+
+    <body>
+        <header>
+            <h1><span>Spot</span>Watson</h1>
+        </header>
+        <section>
+            <div id="chat_box" class="content">
+            </div>
+        </section>
+        <footer>
+            <input type="text" id="user" placeholder="Username" onfocus="this.placeholder = ''" onblur = "this.placeholder = 'Username'"/>
+            <input type="text" id="message" placeholder="Mensagem" onfocus="this.placeholder = ''" onblur = "this.placeholder = 'Mensagem'"/>
+            <button type="submit" name="send_btn" id="send_btn" onclick="sendMessage()">Enviar</button>        </footer>
+    </body>
+
+<script type="text/javascript">
+	var wsUri = 'ws://' + window.document.location.host + '/WhatSound/TesteEndpoint';
+	var ws = new WebSocket(wsUri);
+  
+  function createSystemMessage(message) {
+    var message = document.createTextNode(message);
+
+    var messageBox = document.createElement('p');
+    messageBox.className = 'system';
+
+    messageBox.appendChild(message);
+
+    var chat = document.getElementById('chat_box');
+    chat.appendChild(messageBox);
+  }
+    
+  function createUserMessage(user, message) {
+    var userBox = '<span class="username">';
+    userBox += user + ': ';
+    userBox += '</span>';
+    
+    
+    var url = message;
+    if (message.indexOf('http') >= 0) {
+        //message = '<a target="_blank" href="' + message + '">go to url preview</a>';
+        //message += '<audio controls><source src="' + url + '" type="audio/mpeg">Your browser does not support the audio element.</audio>';
+          message =  '<img src="'+message+'" style="width:128px;height:128px;">'
+    }
+    
+    if (message.indexOf('spotify:') >= 0) {
+      message = '<iframe src="https://embed.spotify.com/?uri='+message+'" width="300" height="80" frameborder="0" allowtransparency="true"></iframe>'
+    }
+    
+    
+    var messageBox = document.createElement('p');
+    messageBox.innerHTML = userBox + message;
+
+    var chat = document.getElementById('chat_box');
+    chat.appendChild(messageBox);
+  }
+
+  ws.onopen = function(ev) {
+    var user = document.getElementById('user');
+    createSystemMessage('[Connected]');
+    createSystemMessage('[Por favor digite um username para iniciar]');
+    
+    document.getElementById('message').disabled = true;
+    document.getElementById('send_btn').disabled = true;
+    user.disabled = false;
+    
+    user.value = "";
+    user.focus();
+    
+  };
+
+  ws.onclose = function(ev) {
+    createSystemMessage('[Disconnected]');
+    
+  }
+
+  ws.onmessage = function(ev) {
+    var payload = JSON.parse(ev.data);
+    createUserMessage(payload.user, payload.message);
+
+    var chat = document.getElementById('chat_box');
+    chat.scrollTop = chat.scrollHeight;
+    
+  }
+
+  function sendMessage() {
+    var user = document.getElementById('user');
+    var message = document.getElementById('message');
+    //document.getElementById('user').disabled = true;
+    
+    var payload = {
+      message: message.value,
+      user: user.value,
+      ts: (new Date()).getTime()
+    };
+
+    ws.send(JSON.stringify(payload));
+    message.value = "";
+  };
+  // Apertar Enter e ir
+    document.getElementById("message")
+    .addEventListener("keyup", function(event) {
+        event.preventDefault();
+        if (event.keyCode == 13) {
+            document.getElementById("send_btn").click();
+        }
+    });
+    document.getElementById("user")
+    .addEventListener("keyup", function(event) {
+        event.preventDefault();
+        
+        if (event.keyCode == 13 || event.keyCode == 9) {
+            document.getElementById('message').disabled = false;
+            document.getElementById('send_btn').disabled = false;
+            document.getElementById('user').disabled = true;
+            var user = document.getElementById('user');
+        var payload = {
+            message: "ola",
+            user: user.value,
+            ts: "system",
+            
+        };
+        var clear = {
+            message: "ola",
+            user: user.value,
+            ts: "system2",
+            
+        };
+        //ws.send(JSON.stringify(clear));
+        //ws.send(JSON.stringify(payload));
+        document.getElementById('message').focus();
+        }
+        
+        
+    });
+
+</script>
+
+<style type="text/css">
+*{
+    margin: 0px;
+    padding: 0px;
+    background-color: transparent;
+    color: #ecebe8;
+    font-size: 16px;
+}
+html, body{
+    background-color: #0f0f0f;
+    margin: 0px;
+    text-align: center;
+    height: 100%;
+    width: 100%;
+    font-family: 'Roboto', sans-serif;
+}
+header, footer{
+    padding: 5px;
+}
+h1{
+    font-weight: normal;
+    font-size: 40px;
+}
+span{
+    color:#21D05F;
+    font-weight: bold;
+    font-size: inherit;
+}
+section{
+    height: 78%;
+    margin: auto;
+    background-color: #151515;
+}
+button{
+    color: #ecebe8;
+    background-color: #21D05F;
+    border: none;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    padding: 5px 10px;
+    -webkit- transition: all .3s;
+    -o- transition: all .3s;
+    -moz- transition: all .3s;
+    transition: all .3s;
+}
+button:hover{
+    background-color: #2A9A52;
+}
+input{
+    width: 20%;
+    border: none;
+    border-bottom: solid #828282 1px;
+    display: inline-block;
+    text-align: center;
+    text-decoration: none;
+    padding: 2px;
+    margin: 5px;
+}
+#chat_box{
+    background-color: transparent;
+    height: 95%;
+    width: 95%;
+    text-align: justify;
+    margin: 0 auto;
+    padding: 10px;
+    overflow: auto;
+}
+#chat_box p{
+    width: 100%;
+    margin: 5px;
+}
+.system{
+    text-align: center;
+    color: #828282;
+    font-size: 14px;
+}
+#user{ width: 20%; }
+#message{ width: 50%; }
+#especial{
+    background-color: transparent;
+    font-size: 18px;
+    padding-top: 10%;
+    height: auto;
+}
+#especial input{
+    width: 50%;
+}
+
+@media only screen and (max-height:400px){
+    h1{ font-size: 30px; }
+    #chat_box{  height: 90%; }
+    @media (max-height:350px){
+        h1{ font-size: 27px; }
+        section{ height: 68%; }
+    }
+    @media (max-height:320px){
+        section{ height: 60%; }
+    }
+}
+@media only screen and (max-height: 480px) and (min-height:401px){
+    h1{ font-size: 35px; }
+    section{ height: 70%; }
+    @media (min-height:450px){
+        section{ height: 75%; }
+    }
+}
+@media only screen and (min-height: 600px){
+    section{ height: 80%; }
+}
+    
+@media only screen and (max-width:380px){
+    header, footer{ padding: 3px; }
+    #user{ width: 65%; }
+    #message{ width: 70%; }
+    button{ padding: 3px 7px; }
+    @media (max-width:350px){
+        section{ height: 72%; }
+    }
+    @media (min-height:550px){
+        section{ height: 78%; }
+    }
+}
+
+
+
+@media only screen and (min-width:900px){
+    #chat_box{ width: 70%; }
+    #especial input{ width: 30%; }
+}
+@media only screen and (min-width:600px){
+    #chat_box{ width: 85%; }
+    #especial input{ width: 40%; }
+}
+@media only screen and (min-width:450px) and (min-height:401px){
+    *{ font-size: 18px; }
+    .system{ font-size: 16px; }
+}
+@media only screen and (min-width:380px) and (min-height:530px){
+    header, footer{ padding: 8px }
+}
+
+</style>
